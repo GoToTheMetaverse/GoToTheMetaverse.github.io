@@ -1,0 +1,2 @@
+(window["webpackJsonp"]=window["webpackJsonp"]||[]).push([["about"],{cf05:function(n,c,t){n.exports=t.p+"img/logo.6c39a58b.png"},f820:function(n,c,t){"use strict";t.r(c);var o=t("7a23"),e=t("cf05"),u=t.n(e),a={class:"about"},l=Object(o["f"])("img",{alt:"logo",src:u.a},null,-1),b=Object(o["f"])("h1",null,"메타버스에 타하얗 시기 입니다.",-1),f=Object(o["f"])("p",null," 새로운 금광이 발견되면 직접 금을 캐실 필요는 없습니다. 곡갱이와 청바지를 파는 것이 안전합니다. ",-1);function s(n,c){return Object(o["o"])(),Object(o["d"])("div",a,[l,b,f])}const i={};i.render=s;c["default"]=i}}]);
+//# sourceMappingURL=about.2b3545a3.js.map
