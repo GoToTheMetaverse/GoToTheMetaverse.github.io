@@ -9,9 +9,27 @@ import kaboom from "https://kaboomjs.com/lib/0.5.1/kaboom.mjs";
 document.body.style.overflow = 'hidden';
 
 // localStorage.setItem('curImageId', 'abc');
-const curEditPicText = localStorage.getItem('curEditPic');
-const curEditPic = JSON.parse(curEditPicText);
-console.log('curEditPic', curEditPic);
+const picEditDataText = localStorage.getItem('picEditData');
+const pic = JSON.parse(picEditDataText);
+console.log('picEditData', pic);
+
+const url = pic.url;
+const loginToken = pic.loginToken;
+const userUid = pic.userUid;
+const curEditPic = pic.pic;
+
+// 데이터가 없는 경우 기본값을 채워넣는다.
+if (curEditPic.pic_data === undefined) {
+    console.log('curEditPic.tiles is undefined');
+    for (let i = 0; i < 15 * 15; i++) {
+        curEditPic.pic_data.tiles += '0';
+    }
+}
+
+
+
+
+
 
 
 // 컴포넌트 k.dt() 로 시간 업데이트 가능
@@ -213,13 +231,51 @@ const g = {
 k.scene("game", () => {
 
     let tiles = [];
-    for (let i = 0; i < 15; i++) {
-        tiles.push([
-            0, 0, 0, 0, 0, // 0
-            0, 0, 0, 0, 0, // 5
-            0, 0, 0, 0, 0, // 10
-        ]);
+    {
+        for (let i = 0; i < 15; i++) {
+            tiles.push([
+                0, 0, 0, 0, 0, // 0
+                0, 0, 0, 0, 0, // 5
+                0, 0, 0, 0, 0, // 10
+            ]);
+        }
+
+
+        let x = 0;
+        let y = 0;
+        for (let i = 0; i < curEditPic.pic_data.length; i++) {
+            const k = curEditPic.pic_data[i];
+            const ox = x;
+            const oy = y;
+
+            x++;
+            if (x >= 15) {
+                x = 0;
+                y++;
+            }
+
+            switch (k) {
+                case '0': tiles[ox][oy] = 0; break;
+                case '1': tiles[ox][oy] = 1; break;
+                case '2': tiles[ox][oy] = 2; break;
+                case '3': tiles[ox][oy] = 3; break;
+                case '4': tiles[ox][oy] = 4; break;
+                case '5': tiles[ox][oy] = 5; break;
+                case '6': tiles[ox][oy] = 6; break;
+                case '7': tiles[ox][oy] = 7; break;
+                case '8': tiles[ox][oy] = 8; break;
+                case '9': tiles[ox][oy] = 9; break;
+                case 'A': tiles[ox][oy] = 10; break;
+                case 'B': tiles[ox][oy] = 11; break;
+                case 'C': tiles[ox][oy] = 12; break;
+                case 'D': tiles[ox][oy] = 13; break;
+                case 'E': tiles[ox][oy] = 14; break;
+                case 'F': tiles[ox][oy] = 15; break;
+            }
+        }
+        console.log('load complete');
     }
+
     k.layers(["bg", "obj", "ui", "effect"], "obj");
 
     g.bg = k.add([
@@ -365,8 +421,15 @@ k.scene("game", () => {
         }
         else if (mx >= btninfoSave.x && my >= btninfoSave.y
             && mx <= btninfoSave.ex && my <= btninfoSave.ey) {
+            if (g.saving) {
+                console.log('click save skip, doing');
+                g.play(SOUND_ERR);
+                return;
+            }
+
             console.log('click save');
-            k.play(SOUND_SAVE);
+
+            g.play(SOUND_SAVE);
             g.effectFadeBig(
                 btninfoSave.cx,
                 btninfoSave.cy,
@@ -374,6 +437,54 @@ k.scene("game", () => {
                 btninfoSave.h,
                 colorWhite.color
             );
+
+            g.saving = true;
+
+            let arr = [];
+            for (let i = 0; i < 15 * 15; i++) {
+                const x = i % 15;
+                const y = Math.floor(i / 15);
+                switch (tiles[x][y]) {
+                    case 0: arr.push('0'); break;
+                    case 1: arr.push('1'); break;
+                    case 2: arr.push('2'); break;
+                    case 3: arr.push('3'); break;
+                    case 4: arr.push('4'); break;
+                    case 5: arr.push('5'); break;
+                    case 6: arr.push('6'); break;
+                    case 7: arr.push('7'); break;
+                    case 8: arr.push('8'); break;
+                    case 9: arr.push('9'); break;
+                    case 10: arr.push('A'); break;
+                    case 11: arr.push('B'); break;
+                    case 12: arr.push('C'); break;
+                    case 13: arr.push('D'); break;
+                    case 14: arr.push('E'); break;
+                    case 15: arr.push('F'); break;
+                    default: arr.push(' '); break;
+                }
+            }
+
+            const req = {
+                api: 'savePicture',
+                loginToken,
+                userUid,
+                picUid: curEditPic.uid,
+                picTileText: arr.join(''),
+            };
+
+            $.post(
+                url,
+                req,
+                function (res, textStatus, jqXHR) {
+                    if (textStatus != 'success') {
+                        console.log('editPicture error', textStatus);
+                    } else {
+                        console.log('editPicture success', res);
+                    }
+                    g.saving = false;
+                });
+            console.log('click save post req');
         }
         else if (mx >= btninfoUndo.x && my >= btninfoUndo.y
             && mx <= btninfoUndo.ex && my <= btninfoUndo.ey) {
