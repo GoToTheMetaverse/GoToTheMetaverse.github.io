@@ -9,9 +9,9 @@ import kaboom from "https://kaboomjs.com/lib/0.5.1/kaboom.mjs";
 document.body.style.overflow = 'hidden';
 
 // localStorage.setItem('curImageId', 'abc');
-const picEditDataText = localStorage.getItem('picEditData');
+const picEditDataText = localStorage.getItem('editPicData');
 const pic = JSON.parse(picEditDataText);
-console.log('picEditData', pic);
+console.log('editPicData', pic);
 
 const url = pic.url;
 const loginToken = pic.loginToken;
@@ -21,9 +21,11 @@ const curEditPic = pic.pic;
 // 데이터가 없는 경우 기본값을 채워넣는다.
 if (curEditPic.pic_data === undefined) {
     console.log('curEditPic.tiles is undefined');
+    const arr = [];
     for (let i = 0; i < 15 * 15; i++) {
-        curEditPic.pic_data.tiles += '0';
+        arr.push('0');
     }
+    curEditPic.pic_data = arr.join('');
 }
 
 
@@ -479,6 +481,8 @@ k.scene("game", () => {
                 function (res, textStatus, jqXHR) {
                     if (textStatus != 'success') {
                         console.log('editPicture error', textStatus);
+                    } else if (res.code != 100) {
+                        console.log('editPicture res.code error', res);
                     } else {
                         console.log('editPicture success', res);
                     }
