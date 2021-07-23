@@ -5,8 +5,13 @@
 // import 링크 출처: https://github.com/replit/kaboom
 import kaboom from "https://kaboomjs.com/lib/0.5.1/kaboom.mjs";
 
-localStorage.setItem('curImageId', 'abc');
-const curImageId = localStorage.getItem('curImageId');
+// noscroll
+document.body.style.overflow = 'hidden';
+
+// localStorage.setItem('curImageId', 'abc');
+const curEditPicText = localStorage.getItem('curEditPic');
+const curEditPic = JSON.parse(curEditPicText);
+console.log('curEditPic', curEditPic);
 
 
 // 컴포넌트 k.dt() 로 시간 업데이트 가능
@@ -224,18 +229,8 @@ k.scene("game", () => {
         k.origin("topleft"),
     ]);
 
-    // g.rect = k.add([
-    //     k.rect(15, 15),
-    //     k.pos(100, 100),
-    //     k.color(1, 1, 1, 1),
-    //     k.layer("effect"),
-    //     k.origin("center"),
-    // ])
-
-
-    console.log('curImageId', curImageId, btninfoTitle);
     g.uiTitle = k.add([
-        k.text(curImageId),
+        k.text(`${curEditPic.uid}:${curEditPic.name}`),
         k.pos(btninfoTitle.cx, btninfoTitle.cy),
         k.layer("ui"),
         k.origin("center"),
