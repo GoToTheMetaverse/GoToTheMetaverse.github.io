@@ -4,8 +4,9 @@
 
 // import 링크 출처: https://github.com/replit/kaboom
 import kaboom from "https://kaboomjs.com/lib/0.5.1/kaboom.mjs";
+
 // no log
-console.log = function () { }
+// console.log = function () { }
 
 // noscroll
 document.body.style.overflow = 'hidden';
@@ -30,7 +31,7 @@ window.addEventListener("message", function (event) {
 });
 
 // 보내기
-function sendMessage(data) {
+function postMessage(data) {
     console.log('kbEditPic send', data);
     window.parent.postMessage(data, '*');
 }
@@ -120,7 +121,8 @@ const A_ENABLE = 1;
 console.log('W', W, 'H', H);
 
 let scale = 1;
-if (!MODE_MAKE_BG) {
+// if (!MODE_MAKE_BG) 
+{
     const w = window.innerWidth;
     const h = window.innerHeight;
     const rw = w / W;
@@ -148,6 +150,7 @@ const SOUND_CLICK = 'SOUND_CLICK';
 
 // GAME CODE START
 k.loadSprite("bg", "res/bg16.png");
+k.loadSprite("null_color", "res/null_color.png");
 k.loadSound(SOUND_SAVE, "res/FA_Confirm_Button_1_4.wav");
 k.loadSound(SOUND_ERR, "res/FA_Select_Button_1_1.wav");
 k.loadSound(SOUND_CLICK, "res/LQ_Click_Button.wav");
@@ -162,43 +165,53 @@ let userUid;
 let curEditPic;
 
 // CONST COLOR
-const color0 = color255(0, 0, 0); // null color
-const color1 = color255(0, 0, 0);
-const color2 = color255(128, 128, 128);
-const color3 = color255(255, 0, 0);
-const color4 = color255(255, 128, 0);
-const color5 = color255(0, 255, 0);
-const color6 = color255(0, 255, 128);
-const color7 = color255(0, 0, 255);
+const carr = [
+    /* 0 */ { hex: 0x000000, name: 'null' },
+    /* 1 */ { hex: 0x000000, name: 'Black' },
+    /* 2 */ { hex: 0x9e9e9e, name: 'Grey' },
+    /* 3 */ { hex: 0x795548, name: 'Brown' },
+    /* 4 */ { hex: 0xff1c1c, name: 'Red' },
+    /* 5 */ { hex: 0xffff00, name: 'Yellow' },
+    /* 6 */ { hex: 0x1cff1c, name: 'Green' },
+    /* 7 */ { hex: 0x1c1cff, name: 'Blue' },
 
-const color8 = color255(255, 255, 255);
-const color9 = color255(192, 192, 192);
-const color10 = color255(255, 128, 64);
-const color11 = color255(255, 255, 64);
-const color12 = color255(128, 255, 128);
-const color13 = color255(64, 255, 128);
-const color14 = color255(128, 128, 255);
-const color15 = color255(128, 128, 255);
-
-const colorBlack = color1;
-const colorWhite = color8;
-const colorGray = color2;
-const colorRed = color3;
-
-const btninfoColorLine1 = [
-    color0, color1, color2, color3,
-    color4, color5, color6, color7,
+    /* 8 */ { hex: 0xffffff, name: 'White' },
+    /* 9 */ { hex: 0xd3d3d3, name: 'grey Light' },
+    /* a */ { hex: 0xc0c0c0, name: 'silver' },
+    /* b */ { hex: 0xb5651d, name: 'brown light' },
+    /* c */ { hex: 0xFF7F7F, name: 'red light' },
+    /* d */ { hex: 0xFFFF99, name: 'yellow light' },
+    /* e */ { hex: 0x32CD32, name: 'lime green' },
+    /* f */ { hex: 0xADD8E6, name: 'Blue light' },
 ];
-const btninfoColorLine2 = [
-    color8, color9, color10, color11,
-    color12, color13, color14, color15,
-];
-const color1All = [
-    color0, color1, color2, color3,
-    color4, color5, color6, color7,
-    color8, color9, color10, color11,
-    color12, color13, color14, color15,
-]
+
+const colors = [];
+for (let i = 0; i < carr.length; i++) {
+    const c = carr[i];
+    let h = c.hex.toString(16);
+    if (i == 0 || i == 1) {
+        h = '000000';
+    }
+    const r = h.substring(0, 2);
+    const g = h.substring(2, 4);
+    const b = h.substring(4, 6);
+    carr[i].rgb = [
+        parseInt(r, 16),
+        parseInt(g, 16),
+        parseInt(b, 16),
+    ];
+    colors.push(color255(
+        carr[i].rgb[0],
+        carr[i].rgb[1],
+        carr[i].rgb[2],
+    ))
+}
+
+
+const colorBlack = colors[1];
+const colorWhite = colors[8];
+const colorGray = colors[2];
+const colorRed = colors[3];
 
 
 // CONST VALUE
@@ -207,6 +220,16 @@ const btninfoColor = makeInfo({ x: UNIT * 18, y: UNIT * 4, w: UNIT * 2, h: UNIT 
 const btninfoSave = makeInfo({ x: UNIT * 18 - 2, y: UNIT * 13, w: UNIT * 2 + 4, h: UNIT });
 const btninfoUndo = makeInfo({ x: UNIT * 18 - 2, y: UNIT * 15, w: UNIT * 2 + 4, h: UNIT });
 const btninfoTile = makeInfo({ x: UNIT, y: UNIT, w: UNIT * UNIT, h: UNIT * UNIT });
+
+for (let i = 0; i < colors.length; i++) {
+    const x = Math.floor(i / 8);
+    const y = i % 8;
+    const px = btninfoColor.x + x * UNIT;
+    const py = btninfoColor.y + y * UNIT;
+    carr[i].i = i;
+    carr[i].x = px;
+    carr[i].y = py;
+}
 
 // GLOBAL OBJECT
 const g = {
@@ -274,6 +297,23 @@ k.scene("game", () => {
         k.origin("topleft"),
     ]);
 
+    k.add([
+        k.sprite('null_color'),
+        k.pos(carr[0].x, carr[0].y),
+        k.layer("ui"),
+        k.origin("topleft"),
+    ]);
+
+    for (let i = 1; i < colors.length; i++) {
+        k.add([
+            k.pos(carr[i].x, carr[i].y),
+            k.rect(UNIT, UNIT),
+            k.layer("ui"),
+            k.origin("topleft"),
+            colors[i],
+        ]);
+    }
+
     g.uiSave = k.add([
         k.text("SAVE"),
         k.pos(btninfoSave.cx, btninfoSave.cy),
@@ -325,7 +365,7 @@ k.scene("game", () => {
                 ),
                 UNIT,
                 UNIT,
-                color1All[cindex]
+                colors[cindex]
             );
             k.drawRect(
                 k.vec2(
@@ -334,7 +374,7 @@ k.scene("game", () => {
                 ),
                 2,
                 2,
-                color1All[cindex]
+                colors[cindex]
             );
         }
     });
@@ -369,7 +409,7 @@ k.scene("game", () => {
                     btninfoTile.y + (ty + 0.5) * UNIT,
                     UNIT,
                     UNIT,
-                    color1All[g.curColorNo].color
+                    colors[g.curColorNo].color
                 );
             }
         }
@@ -388,7 +428,7 @@ k.scene("game", () => {
                     btninfoColor.y + (ty + 0.5) * UNIT,
                     UNIT,
                     UNIT,
-                    color1All[g.curColorNo].color
+                    colors[g.curColorNo].color
                 );
             }
         }
@@ -412,35 +452,28 @@ k.scene("game", () => {
                 colorWhite.color
             );
 
-            sendMessage({
+            const colorCodes = [
+                0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0,
+            ];
+            for (let i = 0; i < g.tiles.length; i++) {
+                const ci = g.tiles[i];
+                colorCodes[ci]++;
+            }
+            console.log('colorCodes #1', colorCodes);
+            for (let i = 0; i < colorCodes.length; i++) {
+                if (colorCodes[i] < 1)
+                    continue;
+                colorCodes[i] = carr[i].hex;
+            }
+            console.log('colorCodes #2', colorCodes);
+            console.log('g.tiles', g.tiles);
+
+            postMessage({
                 cmd: 'kbEditPic.save',
+                colors: colorCodes,
                 tiles: g.tiles,
-            })
-
-            /*
-            const req = {
-                api: 'savePicture',
-                loginToken,
-                userUid,
-                picUid: curEditPic.uid,
-                picTileText: arr.join(''),
-            };
-
-            $.post(
-                url,
-                req,
-                function (res, textStatus, jqXHR) {
-                    if (textStatus != 'success') {
-                        console.log('editPicture error', textStatus);
-                    } else if (res.code != 100) {
-                        console.log('editPicture res.code error', res);
-                    } else {
-                        console.log('editPicture success', res);
-                    }
-                    g.saving = false;
-                });
-            console.log('click save post req');
-            */
+            });
         }
         else if (checkClick(mp, btninfoUndo)) {
             if (g.historyAction.length < 1) {
@@ -448,7 +481,6 @@ k.scene("game", () => {
                 g.play(SOUND_ERR);
                 return;
             }
-
 
             g.play(SOUND_CLICK);
             g.effectFadeBig(
@@ -477,7 +509,7 @@ k.scene("game", () => {
                     btninfoTile.y + ty * 15 + 7.5,
                     15,
                     15,
-                    color1All[old].color
+                    colors[old].color
                 );
             }
         }
@@ -512,23 +544,13 @@ k.scene("loading", () => {
         }
     });
 
-    sendMessage({
+    postMessage({
         cmd: 'kbEditPic.loadingComplete',
     })
 });
 
 
 k.scene("bg-render", () => {
-
-    let cpList = [];
-    for (let i = 0; i < color1All.length; i++) {
-        const x = Math.floor(i / 8);
-        const y = i % 8;
-        const px = btninfoColor.x + x * UNIT;
-        const py = btninfoColor.y + y * UNIT;
-        cpList.push({ i: i, x: px, y: py });
-    }
-    console.log('cpList', cpList);
 
     k.render(() => {
         let i, x, y;
@@ -550,20 +572,14 @@ k.scene("bg-render", () => {
             );
         }
 
-        for (i = 0; i < color1All.length; i++) {
-            k.drawRect(
-                k.vec2(cpList[i].x, cpList[i].y),
-                UNIT,
-                UNIT,
-                color1All[i],
-            );
-            // k.drawRect(
-            //     k.vec2(cpList[i].x + 6, cpList[i].y + 6),
-            //     4,
-            //     4,
-            //     colorWhite,
-            // );
-        }
+        // for (i = 0; i < colors.length; i++) {
+        //     k.drawRect(
+        //         k.vec2(cpList[i].x, cpList[i].y),
+        //         UNIT,
+        //         UNIT,
+        //         colors[i],
+        //     );
+        // }
 
         // draw null color X
         k.drawLine(
