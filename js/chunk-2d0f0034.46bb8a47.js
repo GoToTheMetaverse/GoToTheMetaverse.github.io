@@ -1,0 +1,2 @@
+(window["webpackJsonp"]=window["webpackJsonp"]||[]).push([["chunk-2d0f0034"],{"9b0e":function(e,t,c){"use strict";c.r(t);var n=c("7a23"),d={class:"rounded-lg bg-white py-4 px-2"},s=Object(n["h"])("div",{class:"text-2xl font-bold"},"투자",-1),o=Object(n["h"])("div",{class:"py-4 px-2"},"메타버스 관련 주를 모아봅니다.",-1);function b(e,t){return Object(n["q"])(),Object(n["d"])("div",d,[s,o])}const i={};i.render=b;t["default"]=i}}]);
+//# sourceMappingURL=chunk-2d0f0034.46bb8a47.js.map

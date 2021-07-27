@@ -37,6 +37,27 @@ function postMessage(data) {
 }
 
 
+function effectChecker(sx, sy) {
+    let x2 = sx;
+    let y2 = sy;
+    let x = 0;
+    let y = 0;
+    return {
+        update() {
+            x += k.dt() * 3;
+            y -= k.dt() * 3;
+            if (x > 256) {
+                x -= 256;
+            }
+            if (y < -256) {
+                y += 256;
+            }
+
+            this.pos.x = x2 + x;
+            this.pos.y = y2 + y;
+        }
+    }
+}
 
 // 컴포넌트 k.dt() 로 시간 업데이트 가능
 function effectFadeBigHide() {
@@ -148,6 +169,7 @@ const SOUND_CLICK = 'SOUND_CLICK';
 // GAME CODE START
 k.loadSprite("bg", "res/bg16.png");
 k.loadSprite("null_color", "res/null_color.png");
+k.loadSprite('checker', 'res/checker2.png');
 k.loadSound(SOUND_SAVE, "res/FA_Confirm_Button_1_4.wav");
 k.loadSound(SOUND_ERR, "res/FA_Select_Button_1_1.wav");
 k.loadSound(SOUND_CLICK, "res/LQ_Click_Button.wav");
@@ -335,12 +357,46 @@ k.scene("game", () => {
 
     k.layers(["bg", "obj", "ui", "effect"], "obj");
 
+
+    for (let i = 0; i < 3; i++) {
+        // 첫번째 줄
+        k.add([
+            k.sprite('checker'),
+            k.pos(0, 0),
+            k.layer("bg"),
+            k.origin("topleft"),
+            colorGray,
+            effectChecker(-256 + i * 256, 0),
+        ]);
+        // 두번째줄
+        k.add([
+            k.sprite('checker'),
+            k.pos(0, 0),
+            k.layer("bg"),
+            k.origin("topleft"),
+            colorGray,
+            effectChecker(-256 + i * 256, 256),
+        ]);
+        // 세번째줄
+        if (i < 2) {
+            k.add([
+                k.sprite('checker'),
+                k.pos(0, 0),
+                k.layer("bg"),
+                k.origin("topleft"),
+                colorGray,
+                effectChecker(-256 + i * 256, 512),
+            ]);
+        }
+    }
+
     g.bg = k.add([
         k.sprite('bg'),
         k.pos(0, 0),
         k.layer("bg"),
         k.origin("topleft"),
     ]);
+
 
     k.add([
         k.sprite('null_color'),
@@ -359,6 +415,23 @@ k.scene("game", () => {
         ]);
     }
 
+
+    g.uiMinimapBG = k.add([
+        k.rect(btninfoMinimap.w, btninfoMinimap.h),
+        k.pos(btninfoMinimap.x, btninfoMinimap.y),
+        k.layer("ui"),
+        k.origin("topleft"),
+        colorGray,
+    ]);
+
+
+    g.uiSaveBG = k.add([
+        k.rect(btninfoSave.w, btninfoSave.h),
+        k.pos(btninfoSave.x, btninfoSave.y),
+        k.layer("ui"),
+        k.origin("topleft"),
+        colorGray,
+    ]);
     g.uiSave = k.add([
         k.text("SAVE"),
         k.pos(btninfoSave.cx, btninfoSave.cy),
@@ -367,6 +440,14 @@ k.scene("game", () => {
         k.color(1, 1, 1, 1),
     ]);
 
+
+    g.uiUndoBG = k.add([
+        k.rect(btninfoUndo.w, btninfoUndo.h),
+        k.pos(btninfoSave.x, btninfoUndo.y),
+        k.layer("ui"),
+        k.origin("topleft"),
+        colorGray,
+    ]);
     g.uiUndo = k.add([
         k.text("UNDO"),
         k.pos(btninfoUndo.cx, btninfoUndo.cy),
@@ -395,7 +476,10 @@ k.scene("game", () => {
     g.updateSelectedColorUI();
 
     k.render(() => {
-        for (let i = 0; i < g.tiles.length; i++) {
+        let i, x, y;
+
+
+        for (i = 0; i < g.tiles.length; i++) {
             if (g.tiles[i] == 0)
                 continue;
             const x = i % UNIT;
@@ -418,6 +502,24 @@ k.scene("game", () => {
                 2,
                 2,
                 colors[cindex]
+            );
+        }
+
+        for (i = 0; i <= UNIT; i++) {
+            x = btninfoTile.x;
+            y = btninfoTile.y + i * UNIT;
+            k.drawLine(
+                k.vec2(x, y),
+                k.vec2(x + UNIT * UNIT, y),
+                colorWhite
+            );
+
+            x = btninfoTile.x + i * UNIT;
+            y = btninfoTile.y;
+            k.drawLine(
+                k.vec2(x, y),
+                k.vec2(x, y + UNIT * UNIT),
+                colorWhite
             );
         }
     });
