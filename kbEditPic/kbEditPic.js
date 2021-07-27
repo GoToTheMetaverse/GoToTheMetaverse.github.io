@@ -20,7 +20,7 @@ window.addEventListener("message", function (event) {
     if (recv.cmd == 'kbEditPic.firstData') {
         g.tiles = recv.tiles;
         k.go("game");
-        console.log('start game scene');
+        // console.log('start game scene');
     } else if (recv.cmd == 'kbEditPic.saveComplete') {
         g.saving = false;
         g.uiSave.color.a = A_ENABLE;
@@ -118,7 +118,7 @@ const W = (UNIT + 5) * UNIT; // 336
 const H = (UNIT + 2) * UNIT; // 288
 const A_DISABLE = 0.25;
 const A_ENABLE = 1;
-console.log('W', W, 'H', H);
+// console.log('W', W, 'H', H);
 
 let scale = 1;
 // if (!MODE_MAKE_BG) 
@@ -127,10 +127,7 @@ let scale = 1;
     const h = window.innerHeight;
     const rw = w / W;
     const rh = h / H;
-    const r = rw < rh ? rw : rh;
-    scale = r;
-    // console.log('scale', scale, w, h);
-    // scale = 1;
+    scale = (rw < rh) ? rw : rh;
 }
 
 const k = kaboom({
@@ -286,6 +283,54 @@ const g = {
     }
 };
 
+
+postMessage({
+    cmd: 'kbEditPic.frameSize',
+    w: Math.floor(W * scale),
+    h: Math.floor(H * scale),
+});
+
+
+function procUndo() {
+    if (g.historyAction.length < 1) {
+        console.log('procUndo, no history');
+        g.play(SOUND_ERR);
+        return;
+    }
+
+    console.log('procUndo success');
+    g.play(SOUND_CLICK);
+    g.effectFadeBig(
+        btninfoUndo.cx,
+        btninfoUndo.cy,
+        btninfoUndo.w,
+        btninfoUndo.h,
+        colorWhite.color
+    );
+
+
+    const t = g.historyAction.pop();
+    if (g.historyAction.length < 1) {
+        g.uiUndo.color.a = A_DISABLE;
+    }
+    const tx = t.x;
+    const ty = t.y;
+    const index = getIndex(tx, ty);
+    const old = g.tiles[index];
+    g.tiles[index] = t.c;
+
+
+    if (old > 0) {
+        g.effectFadeBig(
+            btninfoTile.x + tx * 15 + 7.5,
+            btninfoTile.y + ty * 15 + 7.5,
+            15,
+            15,
+            colors[old].color
+        );
+    }
+}
+
 k.scene("game", () => {
 
     k.layers(["bg", "obj", "ui", "effect"], "obj");
@@ -349,8 +394,6 @@ k.scene("game", () => {
 
     g.updateSelectedColorUI();
 
-
-
     k.render(() => {
         for (let i = 0; i < g.tiles.length; i++) {
             if (g.tiles[i] == 0)
@@ -398,7 +441,8 @@ k.scene("game", () => {
                     return;
                 }
 
-                // console.log('click tile #2', tx, ty, g.curColorNo, '<-', old);
+                console.log('g.tiles', g.tiles);
+                console.log('set tile', index, tx, ty, g.curColorNo, '<-', old);
 
                 g.tiles[index] = g.curColorNo;
                 g.play(SOUND_CLICK);
@@ -476,44 +520,11 @@ k.scene("game", () => {
             });
         }
         else if (checkClick(mp, btninfoUndo)) {
-            if (g.historyAction.length < 1) {
-                console.log('click undo, no history');
-                g.play(SOUND_ERR);
-                return;
-            }
-
-            g.play(SOUND_CLICK);
-            g.effectFadeBig(
-                btninfoUndo.cx,
-                btninfoUndo.cy,
-                btninfoUndo.w,
-                btninfoUndo.h,
-                colorWhite.color
-            );
-
-
-            const t = g.historyAction.pop();
-            if (g.historyAction.length < 1) {
-                g.uiUndo.color.a = A_DISABLE;
-            }
-            const tx = t.x;
-            const ty = t.y;
-            const index = getIndex(tx, ty);
-            const old = g.tiles[index];
-            g.tiles[index] = t.c;
-
-
-            if (old > 0) {
-                g.effectFadeBig(
-                    btninfoTile.x + tx * 15 + 7.5,
-                    btninfoTile.y + ty * 15 + 7.5,
-                    15,
-                    15,
-                    colors[old].color
-                );
-            }
+            procUndo();
         }
     });
+
+    k.keyRelease('u', procUndo);
 });
 
 k.scene("loading", () => {
