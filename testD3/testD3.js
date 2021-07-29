@@ -1,29 +1,82 @@
 /* eslint-disable prettier/prettier */
 /* eslint-disable no-undef */
-// https://observablehq.com/@d3/nested-treemap
+// http://localhost:8080/testD3/main.html
 
 import * as d3 from "https://cdn.skypack.dev/d3@7";
 
-// const svg = d3.selectAll("svg");
-const width = 400;
-const height = 300;
-// import data from "./flare-2.js";
-
-var svg = d3.select('body')
-    .append('svg')
-    .attr('width', width)
-    .attr('height', height);
+var svg = d3.select('svg');
+var width = svg.attr('width');
+var height = svg.attr('height');
+console.log('attr', width, height);
 
 
-svg.append('text')
-    .text('Magic!')
-    .attr('x', width / 2)
-    .attr('y', 50)
-    .attr('text-anchor', 'middle');
+function ticked() {
+    link
+        .attr("x1", function (d) {
+            return d.source.x;
+        })
+        .attr("y1", function (d) {
+            return d.source.y;
+        })
+        .attr("x2", function (d) {
+            return d.target.x;
+        })
+        .attr("y2", function (d) {
+            return d.target.y;
+        });
 
-svg.selectAll('circle')
-    .data([100, 130, 160, 190, 610]).enter()
-    .append('circle')
-    .attr('cx', function (d) { return d; })
-    .attr('cy', height / 2).attr('r', 10)
-    .style('fill', 'steelblue');
+    node
+        .attr("cx", function (d) {
+            return d.x;
+        })
+        .attr("cy", function (d) {
+            return d.y;
+        });
+}
+
+var graph = {
+    nodes: [
+        { name: "alice", socialSecurityNumber: 0 },
+        { name: "bob", socialSecurityNumber: 1 },
+        { name: "chen", socialSecurityNumber: 2 },
+    ],
+    links: [
+        { source: "alice", target: "bob" }
+    ]
+};
+
+var sim = d3
+    .forceSimulation(graph.nodes)
+    .force(
+        "link",
+        d3.forceLink(graph.links).id(function (d) {
+            return d.name;
+        })
+    )
+    .force("change", d3.forceManyBody().strength(-30))
+    .force("center", d3.forceCenter(width / 2, height / 2))
+    .on("tick", ticked);
+
+var link = svg
+    .append("g")
+    .selectAll("line")
+    .data(graph.links)
+    .enter()
+    .append("line")
+    .attr("stroke-width", function () {
+        return 3;
+    })
+    .style("stroke", "pink");
+
+
+var node = svg
+    .append("g")
+    .selectAll("circle")
+    .data(graph.nodes)
+    .enter()
+    .append("circle")
+    .attr("r", 5)
+    .attr("fill", function () {
+        return "orange";
+    })
+    .attr("stroke", "yellow");

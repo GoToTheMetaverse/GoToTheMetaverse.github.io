@@ -1,0 +1,44 @@
+{
+    "nodes": [
+        {
+            "id": "test1",
+            "group": 1,
+            "size": 100
+        },
+        {
+            "id": "test2",
+            "group": 2,
+            "size": 30
+        },
+        {
+            "id": "test3",
+            "group": 3,
+            "size": 40
+        },
+        {
+            "id": "test4",
+            "group": 4,
+            "size": 50
+        }
+    ],
+    "links": [
+        {
+            "source": "test1",
+            "target": "test2",
+            "value": 0.1,
+            "distance": 0.1
+        },
+        {
+            "source": "test2",
+            "target": "test3",
+            "value": 0.2,
+            "distance": 0.1
+        },
+        {
+            "source": "test3",
+            "target": "test4",
+            "value": 0.3,
+            "distance": 0.1
+        }
+    ]
+}
