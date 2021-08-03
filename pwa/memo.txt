@@ -1,2 +1,2 @@
 https://metabusgo.xyz/pwa/desktop.png
-https://metabusgo.xyz/pwa/desktop.png
+https://metabusgo.xyz/pwa/mobile.png
