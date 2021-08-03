@@ -15,7 +15,7 @@ document.body.style.overflow = 'hidden';
 window.addEventListener("message", function (event) {
     if (event.data.cmd === undefined) return;
     var recv = event.data;
-    console.log('kbEditPic recv', recv);
+    // console.log('kbEditPic recv', recv);
 
     if (recv.cmd == 'kbEditPic.firstData') {
         g.tiles = recv.tiles;
@@ -32,7 +32,7 @@ window.addEventListener("message", function (event) {
 
 // 보내기
 function postMessage(data) {
-    console.log('kbEditPic send', data);
+    // console.log('kbEditPic send', data);
     window.parent.postMessage(data, '*');
 }
 
@@ -147,8 +147,9 @@ let scale = 1;
     const w = window.innerWidth;
     const h = window.innerHeight;
     const rw = w / W;
-    const rh = h / H;
-    scale = (rw < rh) ? rw : rh;
+    // const rh = h / H;
+    // scale = (rw < rh) ? rw : rh;
+    scale = rw;
 }
 
 const k = kaboom({
