@@ -1,0 +1,16 @@
+{
+  "dir": "ltr",
+  "lang": "ko",
+  "name": "이렇게 된 이상 메타버스로 간다.",
+  "short_name": "",
+  "scope": "/",
+  "display": "fullscreen",
+  "start_url": "/",
+  "background_color": "none",
+  "theme_color": "none",
+  "description": "",
+  "orientation": "portrait",
+  "related_applications": [],
+  "prefer_related_applications": false,
+  "screenshots": []
+}
