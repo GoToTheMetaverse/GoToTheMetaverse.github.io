@@ -1,21 +1,21 @@
 {
     "dir": "ltr",
     "lang": "ko",
-    "name": "이렇게 된 이상 메타버스로 간다.",
+    "name": "metabusgo",
     "short_name": "metabusgo",
     "scope": "/",
     "display": "standalone",
     "start_url": "/",
     "icons": [
         {
-            "src": "/pwa/icon_196.png",
-            "sizes": "196x196",
+            "src": "/pwa/icon_512.png",
+            "sizes": "5126x512",
             "type": "image/png"
         }
     ],
     "background_color": "transparent",
     "theme_color": "transparent",
-    "description": "대세는 메타버스",
+    "description": "metabusgo",
     "orientation": "portrait",
     "related_applications": [],
     "prefer_related_applications": false,
