@@ -75,6 +75,58 @@ function comImageMenu(_y, _w, _h) {
     }
 }
 
+// hide 와 show 제어 지원
+function comUI(_x, _y, _w, _h) {
+
+    let hide = true;
+    let scale = 2;
+    // let started = false;
+    let sx = _x;
+    let sy = _y;
+    let ex = g.width + _w / 2;
+    let ey = sy;
+
+    // hide 위치로
+    const info = util.makeInfo(0, 0, _w, _h);
+
+    return {
+        // update() {
+        //     if (!started) {
+        //         started = true;
+        //         sx = this.pos.x;
+        //         sy = this.pos.y;
+        //         this.hide();
+        //         return;
+        //     }
+        // },
+        isClick(mp) { return util.clickInfo(info, mp); },
+        getInfo() { return info; },
+        getSccle() { return scale; },
+        setScale(s) { scale = s; },
+        getNextScale() {
+            if (scale == 2) { scale = 3; }
+            else if (scale == 3) { scale = 4; }
+            else { scale = 2; }
+            return scale;
+        },
+        show() {
+            console.log('show');
+            hide = false;
+            info.x = this.pos.x = sx;
+            info.y = this.pos.y = sy;
+            util.updateInfo(info);
+        },
+        hide() {
+            console.log('hide');
+            hide = true;
+            info.x = this.pos.x = ex;
+            info.y = this.pos.y = ey;
+            util.updateInfo(info);
+        },
+    }
+}
+
+// 커지면서 사라지는 이펙트
 function comBigHide() {
     let lifeMax = 0.3;
     let life = lifeMax;
@@ -94,6 +146,26 @@ function comBigHide() {
             // console.log('eff', r);
         }
     }
+}
+
+async function addImageAtVisit(data) {
+    console.log('addImageAtVisit', data);
+    await loadImage(data.id, data.url);
+
+    const o = pushImage({
+        id: data.id,
+        x: data.x,
+        y: data.y,
+        s: data.s,
+    });
+
+    g.visitMyTile = {
+        data: data,
+        obj: o,
+    }
+
+    g.uiTrashBtn.show();
+    g.uiScaleBtn.show();
 }
 
 async function loadImage(id, url) {
@@ -119,13 +191,17 @@ function pushImage(data) {
         k.scale(data.s, data.s),
     ]);
 
-    const ret = {
-        id: data.id,
-        obj,
-    };
-    g.useList.push(ret);
-    g.selectIndex = g.useList.length - 1;
-    g.uiScaleBtn.setScale(data.s);
+    if (g.mode == 'game') {
+        const ret = {
+            id: data.id,
+            obj,
+        };
+        g.useList.push(ret);
+        g.selectIndex = g.useList.length - 1;
+        g.uiScaleBtn.setScale(data.s);
+    }
+
+    return obj;
 }
 
 // 메세지 교환
@@ -136,17 +212,20 @@ window.addEventListener("message", async function (event) {
 
     if (recv.cmd == 'kbEditWall.firstData') {
         // console.log('recv data', recv);
-
         for (let i = 0; i < recv.wall_data.arrid.length; i++) {
             const data = recv.wall_data.arrid[i];
             await loadImage(data.id, data.url);
         }
         g.firstData = recv;
+        if (recv.mode == "visit") {
+            k.go("visit");
+        } else {
+            k.go("game");
+        }
 
-        k.go("game");
     } else if (recv.cmd == 'kbEditWall.addImage') {
+        // console.log('addImage', recv);
         const data = recv;
-        console.log('recv data', data);
         await loadImage(data.id, data.url);
         pushImage({
             id: data.id,
@@ -156,6 +235,22 @@ window.addEventListener("message", async function (event) {
         });
     } else if (recv.cmd == 'kbEditWall.saveComplete') {
         g.uiSaveBtn.color.a = 1;
+        if (!recv.success) {
+            g.playSound(SOUND_ERR);
+        }
+    } else if (recv.cmd == 'kbEditWall.addImageAtVisit') {
+
+        const data = recv.tile; // id, url
+        data.x = g.width / 2;
+        data.y = g.height / 2;
+        data.s = 2;
+        await addImageAtVisit(data);
+
+        postMessage({
+            cmd: 'kbEditWall.setEnableAddTile',
+            enable: false,
+        });
+
     } else {
         console.error('kbEditWall recv unknown', recv);
         return;
@@ -193,7 +288,7 @@ const k = kaboom({
 
 
 // ASSET LOAD
-// const SOUND_ERR = 'SOUND_ERR';
+const UNIT = 24;
 
 // GAME CODE START
 const SOUND_ERR = 'SOUND_ERR';
@@ -214,19 +309,28 @@ const colorWhite = k.color(1, 1, 1, 1);
 
 // GLOBAL OBJECT
 const g = {
+    mode: 'game',
     width: W,
     width_half: W / 2,
     width_13: W / 3,
     width_23: (W / 3) * 2,
     height: H,
-    play(id) {
-        k.play(id, k.volume(0.3));
-    },
     loadingMap: {}, // 로드한거
     useList: [ // 화면에 붙인거
         // id, x, y
     ],
     selectIndex: -1,
+    uiScaleBtn: null,
+    uiTrashBtn: null,
+    // visit variable
+    visitMyTile: null, // 하나만붙일 수 있음 {data:~~, obj:~~}
+    // function
+    play(id) {
+        k.play(id, k.volume(0.3));
+    },
+    playSound(id) {
+        k.play(id, k.volume(0.3));
+    },
     renderRectOutline: (o) => {
         const UNIT = 16;
         const s = o.scale.x;
@@ -252,10 +356,8 @@ const g = {
             return false;
         return true;
     },
-    uiScaleBtn: null,
-    uiTrashBtn: null,
     effectBigHide(info) {
-        console.log('effectBigHide', info);
+        // console.log('effectBigHide', info);
         k.add([
             k.rect(info.w, info.h),
             k.pos(info.x, info.y),
@@ -265,9 +367,6 @@ const g = {
             comBigHide(),
         ]);
     },
-    playSound(id) {
-        k.play(id, k.volume(0.3));
-    }
 };
 
 postMessage({
@@ -276,12 +375,175 @@ postMessage({
     h: Math.floor(H * scale),
 });
 
+
+
+k.scene("visit", async () => {
+    g.mode = 'visit';
+    console.log('visit scene');
+
+    let firstDown = false;
+    let firstDownPos = { x: 0, y: 0 };
+
+    g.uiScaleBtn = k.add([
+        k.sprite("scale"),
+        k.pos(g.width - UNIT, UNIT * 2),
+        k.layer("ui"),
+        k.origin("center"),
+        colorWhite,
+        comUI(g.width - UNIT, UNIT * 2, UNIT, UNIT),
+    ]);
+    g.uiScaleBtn.hide();
+
+    g.uiTrashBtn = k.add([
+        k.sprite("trash"),
+        k.pos(g.width - UNIT, UNIT * 3),
+        k.layer("ui"),
+        k.origin("center"),
+        k.scale(1, 1),
+        colorWhite,
+        comUI(g.width - UNIT, UNIT * 3, UNIT, UNIT),
+    ]);
+    g.uiTrashBtn.hide();
+
+    g.uiSaveBtnInfo = util.makeInfo(8 * 4, g.height - 8 * 3, 48, 32);
+    g.uiSaveBtn = k.add([
+        k.sprite("save"),
+        k.pos(g.uiSaveBtnInfo.x, g.uiSaveBtnInfo.y),
+        k.layer("ui"),
+        k.origin("center"),
+        k.scale(2, 2),
+        colorWhite,
+    ]);
+
+    {
+        const recv = g.firstData;
+        for (let i = 0; i < recv.wall_data.arrimg.length; i++) {
+            const data = recv.wall_data.arrimg[i];
+            pushImage(data);
+        }
+
+        let existsMine = false;
+        for (let i = 0; i < recv.visit_list.length; i++) {
+            const data = recv.visit_list[i];
+            if (data.user_uid == recv.user_uid) {
+                existsMine = true;
+                await addImageAtVisit(data);
+            }
+            else {
+                pushImage(data);
+            }
+        }
+
+        postMessage({
+            cmd: 'kbEditWall.setEnableAddTile',
+            enable: !existsMine,
+        })
+    }
+
+    k.mouseDown(() => {
+        if (!firstDown)
+            return;
+        var mp = k.mousePos();
+        if (mp.x == firstDownPos.x && mp.y == firstDownPos.y)
+            return;
+
+        if (g.visitMyTile !== null) {
+            console.log('drag visitMyTile');
+            // 드래깅 처리하면됨
+            const x = Math.floor(mp.x);
+            const y = Math.floor(mp.y);
+            g.visitMyTile.obj.pos = k.vec2(x, y);
+        }
+    });
+
+    k.mouseClick(() => {
+        const mp = firstDownPos = k.mousePos();
+
+        if (g.uiScaleBtn.isClick(mp)) {
+            g.playSound(SOUND_CLICK);
+            g.effectBigHide(g.uiScaleBtn.getInfo());
+
+            const s = g.uiScaleBtn.getNextScale();
+            const selected = g.visitMyTile.obj;
+            selected.scale = k.vec2(s, s);
+            return;
+        }
+
+        if (g.uiTrashBtn.isClick(mp)) {
+            g.playSound(SOUND_CLICK);
+            g.effectBigHide(g.uiTrashBtn.getInfo());
+
+            const selected = g.visitMyTile.obj;
+            g.visitMyTile = null;
+            g.uiTrashBtn.hide();
+            g.uiScaleBtn.hide();
+            k.destroy(selected);
+            return;
+        }
+
+        if (util.clickInfo(g.uiSaveBtnInfo, mp)) {
+            console.log('click save');
+            if (g.uiSaveBtn.color.a < 1.0) {
+                g.playSound(SOUND_ERR);
+                return;
+            }
+
+            g.playSound(SOUND_SAVE);
+            g.effectBigHide(g.uiSaveBtnInfo);
+
+            g.uiSaveBtn.color.a = 0.5;
+
+            let tileData = null;
+            if (g.visitMyTile !== null) {
+                const data = g.visitMyTile.data;
+                const obj = g.visitMyTile.obj;
+                tileData = {
+                    id: data.id,
+                    url: data.url,
+                    x: obj.pos.x,
+                    y: obj.pos.y,
+                    s: obj.scale.x,
+                };
+            }
+
+            postMessage({
+                cmd: 'kbEditWall.saveAtVisit',
+                tile: tileData,
+            });
+        }
+
+        // 드래깅할지 검색
+        if (g.visitMyTile !== null) {
+            const o = g.visitMyTile.obj;
+            if (g.isInside(o, mp)) {
+                console.log('selected visitMyTile');
+                g.uiScaleBtn.setScale(o.scale.x);
+                firstDown = true; // drag 지원
+            }
+        }
+    });
+
+    k.mouseRelease(() => {
+        firstDown = false;
+    });
+
+    k.render(() => {
+        if (g.visitMyTile !== null) {
+            const o = g.visitMyTile.obj
+            g.renderRectOutline(o);
+        }
+    });
+});
+
 k.scene("game", () => {
+    g.mode = 'game';
+    console.log('game scene');
+
     let firstDown = false;
     let firstDownPos = { x: 0, y: 0 };
     k.layers(["bg", "obj", "ui", "effect"], "obj");
 
-    const UNIT = 24;
+
     let info = util.makeInfo(0, 0, UNIT, UNIT);
     g.uiScaleBtn = k.add([
         k.sprite("scale"),
@@ -320,7 +582,6 @@ k.scene("game", () => {
             pushImage(data);
         }
     }
-
 
     k.mouseDown(() => {
         if (!firstDown)
@@ -466,7 +727,7 @@ k.scene("loading", () => {
 
     postMessage({
         cmd: 'kbEditWall.loadingComplete',
-    })
+    });
 });
 
 
