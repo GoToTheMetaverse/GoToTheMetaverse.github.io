@@ -1,0 +1,25 @@
+<html>
+
+<head>
+    <script src="https://unpkg.com/mermaid@8.11.4/dist/mermaid.min.js"></script>
+</head>
+
+<body>
+    <!-- http://localhost:8080/mermaid/main2.html  -->
+    <div class="mermaid">
+        graph TD
+        A[Start] --> B{Is it?};
+        B -->|Yes| C[OK];
+        C --> D[Rethink];
+        D --> B;
+        B ---->|No| E[End];
+
+        id1["This is the (text) in the box"]
+
+    </div>
+    <script>
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+</body>
+
+</html>

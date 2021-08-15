@@ -607,20 +607,22 @@ k.scene("game", () => {
                 const ci = g.tiles[i];
                 colorCodes[ci]++;
             }
-            console.log('colorCodes #1', colorCodes);
+            // console.log('colorCodes #1', colorCodes);
             for (let i = 0; i < colorCodes.length; i++) {
                 if (colorCodes[i] < 1)
                     continue;
                 colorCodes[i] = carr[i].hex;
             }
-            console.log('colorCodes #2', colorCodes);
-            console.log('g.tiles', g.tiles);
+            // console.log('colorCodes #2', colorCodes);
+            // console.log('g.tiles', g.tiles);
 
-            postMessage({
+            const data = {
                 cmd: 'kbEditPic.save',
                 colors: colorCodes,
                 tiles: g.tiles,
-            });
+            };
+            console.log('kbEditPic send save', data);
+            postMessage(data);
         }
         else if (checkClick(mp, btninfoUndo)) {
             procUndo();

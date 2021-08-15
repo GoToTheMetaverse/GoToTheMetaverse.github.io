@@ -1,0 +1,44 @@
+<html>
+
+<head>
+    <script src="https://unpkg.com/mermaid@8.5.2/dist/mermaid.min.js"></script>
+</head>
+
+<body>
+    <!-- http://localhost:8080/mermaid/main.html  -->
+    <div class="mermaid">
+        pie title test chart
+        "part 1": 55
+        "part 2": 45
+    </div>
+    <div class="mermaid">
+        graph LR
+        Start --> Stop
+        id1(box)
+        id2[(Database)]
+        id3((circle))
+        id4>This is the text in the box]
+        id5{rhombus}
+        id6{{hexagon}}
+        id7[/Parallelogram/]
+        id8[/Parallelogram alt\]
+        id9[/Trapezoid\]
+        id10[\Trapezoid alt/]
+        A1-->A2
+        B1 --- B2
+        C1-- This is the text! ---C2
+        D1-->|text|D2
+        E1-.->E2;
+        F1-. text .-> F2
+        G1 ==> G2
+        H1 == text ==> H2
+        I1 -- text --> I2 -- text2 --> I3
+        J1 --> J2 & J3--> J4
+        K1 & K2--> K3 & K4
+    </div>
+    <script>
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+</body>
+
+</html>

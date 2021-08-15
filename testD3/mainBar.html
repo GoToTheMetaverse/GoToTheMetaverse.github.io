@@ -1,0 +1,84 @@
+<!-- <html>
+
+<head>
+    <meta charset="utf-8">
+    <title>testD3</title>
+</head>
+
+<body style="margin: 0 !important; padding: 0 !important;">
+    <svg width="400" height="300"></svg>
+    <script type="module" src="./testD3.js" lang="javascript"></script>
+</body>
+
+</html> -->
+<html>
+
+<head>
+    <style>
+        /* .node circle {
+            stroke: #3a403d;
+            stroke-width: .5px;
+        } */
+        text {
+            font-size: 3em;
+        }
+    </style>
+    <script src="https://d3js.org/d3.v4.min.js"></script>
+</head>
+
+<body style="margin: 0 !important; padding: 0 !important;">
+
+    <svg width="900" height="700"></svg>
+    <script>
+        // http://localhost:8080/testD3/mainBar.html
+
+        var width = window.innerWidth;
+        var height = window.innerHeight;
+        var svg = d3.select("svg");
+        svg.attr('width', width);
+        svg.attr('height', height);
+        console.log('width', width, height);
+
+        const render = (data) => {
+
+            const dmax = d3.max(data, d => d.number);
+            const margin = { top: 20, right: 50, bottom: 100, left: 100 };
+            const wsize = width - margin.left - margin.right;
+            const hsize = height - margin.top - margin.bottom;
+
+
+            const xscale = d3.scaleLinear()
+                .domain([0, dmax])
+                .range([margin.left, wsize]);
+
+            const yscale = d3.scaleBand()
+                .domain(data.map(d => d.name))
+                .range([margin.top, hsize])
+                .padding(0.5)
+
+            const yaxis = d3.axisLeft(yscale);
+
+            const g = svg.append('g')
+                .attr('transform', `translate(${margin.left}, ${margin.top})`);
+
+            g.append('g').call(d3.axisLeft(yscale));
+            g.append('g').call(d3.axisBottom(xscale))
+                .attr('transform', `translate(0, ${hsize})`);
+
+            g.selectAll('rect').data(data)
+                .enter().append('rect')
+                .attr('width', d => xscale(d.number))
+                .attr('y', d => yscale(d.name))
+                .attr('height', yscale.bandwidth())
+        }
+        d3.csv('mainBar.csv', (data) => {
+            data.forEach(d => {
+                d.number = +d.number;
+            });
+            render(data);
+        });
+
+    </script>
+</body>
+
+</html>
