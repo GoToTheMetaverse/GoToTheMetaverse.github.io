@@ -171,11 +171,17 @@ async function addImageAtVisit(data) {
 async function loadImage(id, url) {
     const key = `${id}`;
     if (g.loadingMap[key] !== undefined) {
-        console.log('loadImage skip', id, url);
-        return;
+        const oldUrl = g.loadingMap[key].url;
+        if (oldUrl === url) {
+            console.log('loadImage skip', id, url);
+            return;
+        }
+        console.log('loadImage overload', id, url, '<-', oldUrl);
+    }
+    else {
+        // console.log('loadImage ', id, url);
     }
 
-    // console.log('loadImage ', id, url);
     g.loadingMap[key] = { id, url };
     await k.loadSprite(key, url);
 }
