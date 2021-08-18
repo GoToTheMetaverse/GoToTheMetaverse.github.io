@@ -541,7 +541,7 @@ k.scene("visit", async () => {
     });
 });
 
-k.scene("game", () => {
+k.scene("game", async () => {
     g.mode = 'game';
     console.log('game scene');
 
@@ -585,6 +585,12 @@ k.scene("game", () => {
         const recv = g.firstData;
         for (let i = 0; i < recv.wall_data.arrimg.length; i++) {
             const data = recv.wall_data.arrimg[i];
+            pushImage(data);
+        }
+
+        for (let i = 0; i < recv.visit_list.length; i++) {
+            const data = recv.visit_list[i];
+            await loadImage(data.id, data.url);
             pushImage(data);
         }
     }
