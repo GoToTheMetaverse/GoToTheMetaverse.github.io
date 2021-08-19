@@ -12,6 +12,14 @@ import util from "./util.js";
 // noscroll
 document.body.style.overflow = 'hidden';
 
+// 소숫점 오차 생길까바
+function isSameScale(input, s) {
+    if (input < s * 0.9)
+        return false;
+    if (input > s * 1.1)
+        return false;
+    return true;
+}
 
 // component
 function comImageMenu(_y, _w, _h) {
@@ -67,9 +75,13 @@ function comImageMenu(_y, _w, _h) {
             scale = s;
         },
         getNextScale() {
-            if (scale == 2) { scale = 3; }
-            else if (scale == 3) { scale = 4; }
-            else { scale = 2; }
+            if (isSameScale(scale, 0.5)) { scale = 0.75; }
+            else if (isSameScale(scale, 0.75)) { scale = 1; }
+            else if (isSameScale(scale, 1)) { scale = 1.5; }
+            else if (isSameScale(scale, 1.5)) { scale = 2; }
+            else if (isSameScale(scale, 2)) { scale = 3; }
+            else if (isSameScale(scale, 3)) { scale = 4; }
+            else { scale = 0.5; }
             return scale;
         },
     }
