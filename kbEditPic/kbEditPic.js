@@ -331,26 +331,32 @@ function procUndo() {
         colorWhite.color
     );
 
-
-    const t = g.historyAction.pop();
+    const data = g.historyAction.pop();
     if (g.historyAction.length < 1) {
         g.uiUndo.color.a = A_DISABLE;
     }
-    const tx = t.x;
-    const ty = t.y;
-    const index = getIndex(tx, ty);
-    const old = g.tiles[index];
-    g.tiles[index] = t.c;
 
+    if (data.type == 'drag') {
+        data.list.forEach((t) => {
+            const tx = t.x;
+            const ty = t.y;
+            const index = getIndex(tx, ty);
+            const old = g.tiles[index];
+            g.tiles[index] = t.c;
 
-    if (old > 0) {
-        g.effectFadeBig(
-            btninfoTile.x + tx * 15 + 7.5,
-            btninfoTile.y + ty * 15 + 7.5,
-            15,
-            15,
-            colors[old].color
-        );
+            if (old > 0) {
+                g.effectFadeBig(
+                    btninfoTile.x + tx * 15 + 7.5,
+                    btninfoTile.y + ty * 15 + 7.5,
+                    15,
+                    15,
+                    colors[old].color
+                );
+            }
+        });
+    }
+    else {
+        console.error('procUndo unknown type', data.type);
     }
 }
 
@@ -478,8 +484,6 @@ k.scene("game", () => {
 
     k.render(() => {
         let i, x, y;
-
-
         for (i = 0; i < g.tiles.length; i++) {
             if (g.tiles[i] == 0)
                 continue;
@@ -525,16 +529,72 @@ k.scene("game", () => {
         }
     });
 
+    g.isDrag = false;
+    g.historyDrag = [];
+    g.tx = -1;
+    g.ty = -1;
+
+    k.mouseDown(() => {
+        g.isDrag = true;
+
+        var mp = k.mousePos();
+        if (checkClick(mp, btninfoTile)) {
+            const tx = Math.ceil((mp.x - UNIT) / UNIT) - 1;
+            const ty = Math.ceil((mp.y - UNIT) / UNIT) - 1;
+            if (tx === g.tx && ty == g.ty) {
+                return;
+            }
+            g.tx = tx;
+            g.ty = ty;
+            // console.log('mouseDown', g.tx, g.ty);
+
+            if (tx >= 0 && ty >= 0 && tx < UNIT && ty < UNIT) {
+                const index = getIndex(tx, ty);
+                const old = g.tiles[index];
+                if (old == g.curColorNo) {
+                    // console.log('click tile skip same color');
+                    return;
+                }
+
+                // console.log('g.tiles', g.tiles);
+                // console.log('set tile', index, tx, ty, g.curColorNo, '<-', old);
+
+                g.tiles[index] = g.curColorNo;
+                g.uiUndo.color.a = A_ENABLE;
+                // g.historyAction.push({ x: tx, y: ty, c: old });
+                g.historyDrag.push({ x: tx, y: ty, c: old });
+
+                g.play(SOUND_CLICK);
+                g.effectFadeBig(
+                    btninfoTile.x + (tx + 0.5) * UNIT,
+                    btninfoTile.y + (ty + 0.5) * UNIT,
+                    UNIT,
+                    UNIT,
+                    colors[g.curColorNo].color
+                );
+            }
+        }
+    });
+
+    k.mouseRelease(() => {
+        g.isDrag = false;
+        if (g.historyDrag.length > 0) {
+            g.historyAction.push({
+                type: 'drag',
+                list: g.historyDrag,
+            });
+            g.historyDrag = [];
+        }
+    });
+
     k.mouseClick(() => {
         var mp = k.mousePos();
         var mx = mp.x;
         var my = mp.y;
-
-        // 타일 클릭인가
+        /*
         if (checkClick(mp, btninfoTile)) {
             const tx = Math.ceil((mx - UNIT) / UNIT) - 1;
             const ty = Math.ceil((my - UNIT) / UNIT) - 1;
-            // console.log('click tile', tx, ty);
 
             if (tx >= 0 && ty >= 0 && tx < UNIT && ty < UNIT) {
                 const index = getIndex(tx, ty);
@@ -561,7 +621,8 @@ k.scene("game", () => {
             }
         }
         // 칼라 선택인가.
-        else if (checkClick(mp, btninfoColor)) {
+        else */
+        if (checkClick(mp, btninfoColor)) {
             const tx = Math.ceil((mx - btninfoColor.x) / UNIT) - 1;
             const ty = Math.ceil((my - btninfoColor.y) / UNIT) - 1;
             if (tx >= 0 && ty >= 0 && tx < 87 && ty < 8) {
@@ -586,10 +647,9 @@ k.scene("game", () => {
                 return;
             }
 
+            console.log('save try');
             g.saving = true;
             g.uiSave.color.a = A_DISABLE;
-            console.log('click save');
-
             g.play(SOUND_SAVE);
             g.effectFadeBig(
                 btninfoSave.cx,
@@ -599,22 +659,22 @@ k.scene("game", () => {
                 colorWhite.color
             );
 
+            // 0 아니면 색 hex 값
             const colorCodes = [
                 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0,
             ];
+
             for (let i = 0; i < g.tiles.length; i++) {
                 const ci = g.tiles[i];
                 colorCodes[ci]++;
             }
-            // console.log('colorCodes #1', colorCodes);
+
             for (let i = 0; i < colorCodes.length; i++) {
                 if (colorCodes[i] < 1)
                     continue;
                 colorCodes[i] = carr[i].hex;
             }
-            // console.log('colorCodes #2', colorCodes);
-            // console.log('g.tiles', g.tiles);
 
             const data = {
                 cmd: 'kbEditPic.save',
