@@ -281,6 +281,38 @@ function postMessage(data) {
     window.parent.postMessage(data, '*');
 }
 
+// 배경 로드및 바꾸기
+async function changeBG(bgId = undefined) {
+    if (bgId === undefined) {
+        bgId = g.bgId = (g.bgId + 1) % 4;
+    }
+
+    console.log('changeBG', bgId);
+
+    if (bgId === 0) {
+        if (g.bg != null) {
+            k.destroy(g.bg);
+            g.bgSprite = null;
+        }
+        return;
+    }
+
+    const bgResName = `/res/bg-${bgId}.png`;
+    if (g.bgLoadedList[bgResName] === undefined) {
+        await k.loadSprite(bgResName, bgResName);
+        g.bgLoadedList[bgResName] = 1;
+        console.log('changeBG load ok', bgResName);
+    }
+
+    g.bgSprite = k.add([
+        k.sprite(bgResName),
+        k.pos(0, 0),
+        k.layer("bg"),
+        k.origin("topleft"),
+    ]);
+
+}
+
 const W = 400;
 const H = 300;
 
@@ -315,6 +347,7 @@ const SOUND_CLICK = 'SOUND_CLICK';
 k.loadSprite("scale", "/res/scale.png");
 k.loadSprite("trash", "/res/trash.png");
 k.loadSprite("save", "/res/save.png");
+k.loadSprite("bg", "/res/bg.png");
 k.loadSound(SOUND_SAVE, "/res/FA_Confirm_Button_1_4.wav");
 k.loadSound(SOUND_ERR, "/res/FA_Select_Button_1_1.wav");
 k.loadSound(SOUND_CLICK, "/res/LQ_Click_Button.wav");
@@ -327,6 +360,9 @@ const colorWhite = k.color(1, 1, 1, 1);
 
 // GLOBAL OBJECT
 const g = {
+    bgId: 0,
+    bgSprite: null,
+    bgLoadedList: {}, // key=resname
     mode: 'game',
     width: W,
     width_half: W / 2,
@@ -593,7 +629,25 @@ k.scene("game", async () => {
         colorWhite,
     ]);
 
+    g.uiBgBtnInfo = util.makeInfo(8 * 8, g.height - 8 * 3, 32, 32);
+    g.uiBgBtn = k.add([
+        k.sprite("bg"),
+        k.pos(g.uiBgBtnInfo.x, g.uiBgBtnInfo.y),
+        k.layer("ui"),
+        k.origin("center"),
+        k.scale(0.5, 0.5),
+        colorWhite,
+    ]);
+
     {
+        if (g.firstData.wall_data.bg_id !== undefined) {
+            const bg_id = g.firstData.wall_data.bg_id;
+            if (bg_id !== 0) {
+                console.log('g.firstData.bg_id', bg_id);
+                await changeBG(bg_id);
+            }
+        }
+
         const recv = g.firstData;
         for (let i = 0; i < recv.wall_data.arrimg.length; i++) {
             const data = recv.wall_data.arrimg[i];
@@ -687,9 +741,19 @@ k.scene("game", async () => {
                 cmd: 'kbEditWall.save',
                 width: g.width,
                 height: g.height,
+                bg_id: g.bgId,
                 arrid: arrid,
                 arrimg: arrimg,
             });
+        }
+
+
+        if (util.clickInfo(g.uiBgBtnInfo, mp)) {
+            // console.log('uiBgBtnInfo');
+            g.playSound(SOUND_CLICK);
+            g.effectBigHide(g.uiBgBtnInfo);
+
+            changeBG();
         }
 
         // 드래깅할지 검색
