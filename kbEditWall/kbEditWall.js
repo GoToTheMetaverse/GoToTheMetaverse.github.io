@@ -284,7 +284,7 @@ function postMessage(data) {
 // 배경 로드및 바꾸기
 async function changeBG(bgId = undefined) {
     if (bgId === undefined) {
-        bgId = g.bgId = (g.bgId + 1) % 4;
+        bgId = g.bgId = (g.bgId + 1) % 5;
     }
 
     console.log('changeBG', bgId);
@@ -471,6 +471,16 @@ k.scene("visit", async () => {
 
     {
         const recv = g.firstData;
+        console.log('recv', recv.wall_data);
+
+        if (recv.wall_data.bg_id !== undefined) {
+            const bg_id = recv.wall_data.bg_id;
+            if (bg_id !== 0) {
+                console.log('g.firstData.bg_id', bg_id);
+                await changeBG(bg_id);
+            }
+        }
+
         for (let i = 0; i < recv.wall_data.arrimg.length; i++) {
             const data = recv.wall_data.arrimg[i];
             pushImage(data);
@@ -640,15 +650,16 @@ k.scene("game", async () => {
     ]);
 
     {
-        if (g.firstData.wall_data.bg_id !== undefined) {
-            const bg_id = g.firstData.wall_data.bg_id;
+        const recv = g.firstData;
+
+        if (recv.wall_data.bg_id !== undefined) {
+            const bg_id = recv.wall_data.bg_id;
             if (bg_id !== 0) {
                 console.log('g.firstData.bg_id', bg_id);
                 await changeBG(bg_id);
             }
         }
 
-        const recv = g.firstData;
         for (let i = 0; i < recv.wall_data.arrimg.length; i++) {
             const data = recv.wall_data.arrimg[i];
             pushImage(data);
