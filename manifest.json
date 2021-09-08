@@ -8,7 +8,7 @@
     "start_url": "/",
     "icons": [
         {
-            "src": "/pwa/icon_512.png",
+            "src": "/images/pwa-icon_512.png",
             "sizes": "512x512",
             "type": "image/png"
         }
@@ -21,12 +21,12 @@
     "prefer_related_applications": false,
     "screenshots": [
         {
-            "src": "/pwa/screenshot_desktop_1024_768.png",
+            "src": "/images/pwa-screenshot_desktop_1024_768.png",
             "size": "1024x768",
             "type": "image/png"
         },
         {
-            "src": "/pwa/screenshot_mobile_480_640.png",
+            "src": "/images/pwa-screenshot_mobile_480_640.png",
             "size": "480x640",
             "type": "image/png"
         }

@@ -4,7 +4,7 @@
 
 // import 링크 출처: https://github.com/replit/kaboom
 import kaboom from "https://kaboomjs.com/lib/0.5.1/kaboom.mjs";
-import util from "./util.js";
+import util from "../lib/util.js";
 
 // no log
 // console.log = function () { }
